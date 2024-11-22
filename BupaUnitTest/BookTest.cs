@@ -68,6 +68,23 @@ namespace BupaTest
             Assert.IsNotNull(books);
            // Assert.AreEqual(4, books.Count); // Should return 4 books in total
         }
+
+        [Test]
+        public async Task GetBooks_ReturnsNotFound_WhenNoBooksAreFound()
+        {
+            // Arrange
+            _mockBookService.Setup(service => service.GetBooksAsync()).ReturnsAsync(new List<BookOwner>());
+
+            // Act
+            var result = await _controller.GetBooks();
+
+            // Assert
+            var notFoundResult = result as NotFoundObjectResult;
+            Assert.IsNotNull(notFoundResult);
+            var message = notFoundResult.Value as dynamic;
+            Assert.AreEqual("No books found.", message.message);
+        }
+
         [Test]
         public async Task GetBooks_ReturnsOnlyHardcoverBooks_WhenFilterIsHardcover()
         {
@@ -105,6 +122,36 @@ namespace BupaTest
             var okResult = result as OkObjectResult;
             Assert.IsNotNull(okResult);
         }
+
+        [Test]
+        public async Task GetBooks_ReturnsNotFound_WhenNoHardcoverBooksFound()
+        {
+            // Arrange
+            var mockBooks = new List<BookOwner>
+            {
+                new BookOwner
+                {
+                    Name = "Owner 1",
+                    Age = 30,
+                    Books = new List<Book>
+                    {
+                        new Book { Name = "Book A", Type = "Paperback" }
+                    }
+                }
+            };
+
+            _mockBookService.Setup(service => service.GetBooksAsync()).ReturnsAsync(mockBooks);
+
+            // Act
+            var result = await _controller.GetBooks("hardcover");
+
+            // Assert
+            var notFoundResult = result as NotFoundObjectResult;
+            Assert.IsNotNull(notFoundResult);
+            var message = notFoundResult.Value as dynamic;
+            Assert.AreEqual("No hardcover books found.", message.message);
+        }
+
         [Test]
         public async Task GetBooks_ReturnsEmptyList_WhenNoBooks()
         {
